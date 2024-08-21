@@ -1,4 +1,4 @@
-# go-project-template
+# sudoku
 just a basic template so I can make go projects faster
 
 the [go.mod](./go.mod) will have to updated in new projects
