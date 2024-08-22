@@ -7,144 +7,75 @@ import (
 
 func TestNew(t *testing.T) {
 	type args struct {
-		min int
 		max int
 	}
 	tests := []struct {
 		name    string
 		args    args
-		want    *Puzzle
+		want    Puzzle
 		wantErr bool
 	}{
 		{
-			name: "4x4",
-			args: args{1, 4},
-			want: &Puzzle{
-				Cells: []*Cell{
-					{Position: &Position{1, 1, 1, 1}},
-					{Position: &Position{1, 2, 1, 1}},
-					{Position: &Position{1, 3, 1, 2}},
-					{Position: &Position{1, 4, 1, 2}},
-					{Position: &Position{2, 1, 1, 1}},
-					{Position: &Position{2, 2, 1, 1}},
-					{Position: &Position{2, 3, 1, 2}},
-					{Position: &Position{2, 4, 1, 2}},
-					{Position: &Position{3, 1, 2, 1}},
-					{Position: &Position{3, 2, 2, 1}},
-					{Position: &Position{3, 3, 2, 2}},
-					{Position: &Position{3, 4, 2, 2}},
-					{Position: &Position{4, 1, 2, 1}},
-					{Position: &Position{4, 2, 2, 1}},
-					{Position: &Position{4, 3, 2, 2}},
-					{Position: &Position{4, 4, 2, 2}},
+			"square works",
+			args{4},
+			Puzzle{
+				Max:       4,
+				macroSize: 2,
+				InitialValues: map[Position]int{
+					{1, 1}: 0, {2, 1}: 0, {3, 1}: 0, {4, 1}: 0,
+					{1, 2}: 0, {2, 2}: 0, {3, 2}: 0, {4, 2}: 0,
+					{1, 3}: 0, {2, 3}: 0, {3, 3}: 0, {4, 3}: 0,
+					{1, 4}: 0, {2, 4}: 0, {3, 4}: 0, {4, 4}: 0,
 				},
-				Min: 1,
-				Max: 4,
+				CurrentValues: map[Position]int{
+					{1, 1}: 0, {2, 1}: 0, {3, 1}: 0, {4, 1}: 0,
+					{1, 2}: 0, {2, 2}: 0, {3, 2}: 0, {4, 2}: 0,
+					{1, 3}: 0, {2, 3}: 0, {3, 3}: 0, {4, 3}: 0,
+					{1, 4}: 0, {2, 4}: 0, {3, 4}: 0, {4, 4}: 0,
+				},
+				TrueValues: map[Position]int{
+					{1, 1}: 0, {2, 1}: 0, {3, 1}: 0, {4, 1}: 0,
+					{1, 2}: 0, {2, 2}: 0, {3, 2}: 0, {4, 2}: 0,
+					{1, 3}: 0, {2, 3}: 0, {3, 3}: 0, {4, 3}: 0,
+					{1, 4}: 0, {2, 4}: 0, {3, 4}: 0, {4, 4}: 0,
+				},
+				PotentialValues: map[Position][]int{
+					{1, 1}: {0}, {2, 1}: {0}, {3, 1}: {0}, {4, 1}: {0},
+					{1, 2}: {0}, {2, 2}: {0}, {3, 2}: {0}, {4, 2}: {0},
+					{1, 3}: {0}, {2, 3}: {0}, {3, 3}: {0}, {4, 3}: {0},
+					{1, 4}: {0}, {2, 4}: {0}, {3, 4}: {0}, {4, 4}: {0},
+				},
+				Positions: []Position{
+					{1, 1}, {2, 1}, {3, 1}, {4, 1},
+					{1, 2}, {2, 2}, {3, 2}, {4, 2},
+					{1, 3}, {2, 3}, {3, 3}, {4, 3},
+					{1, 4}, {2, 4}, {3, 4}, {4, 4},
+				},
 			},
-			wantErr: false,
+			false,
 		},
 		{
-			name: "9x9; only one row checked",
-			args: args{1, 9},
-			want: &Puzzle{
-				Cells: []*Cell{
-					{Position: &Position{1, 1, 1, 1}},
-					{Position: &Position{1, 2, 1, 1}},
-					{Position: &Position{1, 3, 1, 1}},
-					{Position: &Position{1, 4, 1, 2}},
-					{Position: &Position{1, 5, 1, 2}},
-					{Position: &Position{1, 6, 1, 2}},
-					{Position: &Position{1, 7, 1, 3}},
-					{Position: &Position{1, 8, 1, 3}},
-					{Position: &Position{1, 9, 1, 3}},
-				},
-				Min: 1,
-				Max: 4,
-			},
-			wantErr: false,
-		},
-		{
-			name:    "non-Square integer errors",
-			args:    args{1, 5},
-			want:    &Puzzle{},
-			wantErr: true,
+			"non-square fails",
+			args{5},
+			Puzzle{},
+			true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := New(tt.args.min, tt.args.max)
+			got, err := New(tt.args.max)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("New() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			for _, c := range tt.want.Cells {
-				gotCell := got.GetCell(*c.Position)
-				if !gotCell.Position.Equal(c.Position) {
-					t.Errorf("New() = %v, want %v\n", gotCell.Position, c.Position)
-				}
-			}
-		})
-	}
-}
-
-func Test_determineMacro(t *testing.T) {
-	type args struct {
-		value     int
-		macroSize int
-	}
-	tests := []struct {
-		name string
-		args args
-		want int
-	}{
-		{"1:1", args{1, 3}, 1},
-		{"2:1", args{2, 3}, 1},
-		{"3:1", args{3, 3}, 1},
-		{"4:2", args{4, 3}, 2},
-		{"5:2", args{5, 3}, 2},
-		{"6:2", args{6, 3}, 2},
-		{"7:3", args{7, 3}, 3},
-		{"8:3", args{8, 3}, 3},
-		{"9:3", args{9, 3}, 3},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := determineMacro(tt.args.value, tt.args.macroSize); got != tt.want {
-				t.Errorf("determineMacro() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestPuzzle_GetCell(t *testing.T) {
-	testPuzzle, _ := New(1, 4)
-	type args struct {
-		position Position
-	}
-	tests := []struct {
-		name   string
-		puzzle *Puzzle
-		args   args
-		want   *Cell
-	}{
-		{
-			"get's Cell",
-			testPuzzle,
-			args{Position{3, 3, 2, 2}},
-			testPuzzle.Cells[10],
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.puzzle.GetCell(tt.args.position); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Puzzle.GetCell() = %v, want %v", got, tt.want)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("New() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
 func TestPuzzle_GetMacro(t *testing.T) {
-	testPuzzle, _ := New(1, 4)
 	type args struct {
 		position Position
 	}
@@ -152,42 +83,38 @@ func TestPuzzle_GetMacro(t *testing.T) {
 		name   string
 		puzzle *Puzzle
 		args   args
-		want   []*Cell
+		want   []Position
 	}{
 		{
-			"get's Macro properly",
-			testPuzzle,
-			args{Position{3, 3, 2, 2}},
-			[]*Cell{
-				{Position: &Position{3, 3, 2, 2}},
-				{Position: &Position{3, 4, 2, 2}},
-				{Position: &Position{4, 3, 2, 2}},
-				{Position: &Position{4, 4, 2, 2}},
+			"gets macro",
+			&Puzzle{
+				Max:       4,
+				macroSize: 2,
+				Positions: []Position{
+					{1, 1}, {2, 1}, {3, 1}, {4, 1}, {1, 2}, {2, 2}, {3, 2}, {4, 2},
+					{1, 3}, {2, 3}, {3, 3}, {4, 3}, {1, 4}, {2, 4}, {3, 4}, {4, 4},
+				},
+				CurrentValues: map[Position]int{
+					{1, 1}: 1, {2, 1}: 2, {3, 1}: 3, {4, 1}: 4,
+					{1, 2}: 2, {2, 2}: 3, {3, 2}: 1, {4, 2}: 2,
+					{1, 3}: 2, {2, 3}: 1, {3, 3}: 4, {4, 3}: 3,
+					{1, 4}: 4, {2, 4}: 3, {3, 4}: 2, {4, 4}: 1,
+				},
 			},
+			args{Position{2, 3}},
+			[]Position{{1, 3}, {2, 3}, {1, 4}, {2, 4}},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := tt.puzzle.GetMacro(tt.args.position)
-			for _, c := range tt.want {
-				gotHas := false
-
-				for _, g := range got {
-					if g.Position.Equal(c.Position) {
-						gotHas = true
-					}
-				}
-
-				if !gotHas {
-					t.Errorf("got:%v doesn't contain %v\n", got, c.Position)
-				}
+			if got := tt.puzzle.GetMacro(tt.args.position); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Puzzle.GetMacro() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
 func TestPuzzle_GetColumn(t *testing.T) {
-	testPuzzle, _ := New(1, 4)
 	type args struct {
 		position Position
 	}
@@ -195,42 +122,33 @@ func TestPuzzle_GetColumn(t *testing.T) {
 		name   string
 		puzzle *Puzzle
 		args   args
-		want   []*Cell
+		want   []Position
 	}{
 		{
-			"get's Column properly",
-			testPuzzle,
-			args{Position{3, 3, 2, 2}},
-			[]*Cell{
-				{Position: &Position{1, 3, 1, 2}},
-				{Position: &Position{2, 3, 1, 2}},
-				{Position: &Position{3, 3, 2, 2}},
-				{Position: &Position{4, 3, 2, 2}},
+			"gets col",
+			&Puzzle{
+				Max: 4,
+				CurrentValues: map[Position]int{
+					{1, 1}: 1, {2, 1}: 2, {3, 1}: 3, {4, 1}: 4,
+					{1, 2}: 2, {2, 2}: 3, {3, 2}: 1, {4, 2}: 2,
+					{1, 3}: 2, {2, 3}: 1, {3, 3}: 4, {4, 3}: 3,
+					{1, 4}: 4, {2, 4}: 3, {3, 4}: 2, {4, 4}: 1,
+				},
 			},
+			args{Position{2, 3}},
+			[]Position{{1, 3}, {2, 3}, {3, 3}, {4, 3}},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := tt.puzzle.GetColumn(tt.args.position)
-			for _, c := range tt.want {
-				gotHas := false
-
-				for _, g := range got {
-					if g.Position.Equal(c.Position) {
-						gotHas = true
-					}
-				}
-
-				if !gotHas {
-					t.Errorf("got:%v doesn't contain %v\n", got, c.Position)
-				}
+			if got := tt.puzzle.GetColumn(tt.args.position); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Puzzle.GetColumn() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
 func TestPuzzle_GetRow(t *testing.T) {
-	testPuzzle, _ := New(1, 4)
 	type args struct {
 		position Position
 	}
@@ -238,287 +156,535 @@ func TestPuzzle_GetRow(t *testing.T) {
 		name   string
 		puzzle *Puzzle
 		args   args
-		want   []*Cell
+		want   []Position
 	}{
 		{
-			"get's Row properly",
-			testPuzzle,
-			args{Position{3, 3, 2, 2}},
-			[]*Cell{
-				{Position: &Position{3, 1, 2, 1}},
-				{Position: &Position{3, 2, 2, 1}},
-				{Position: &Position{3, 3, 2, 2}},
-				{Position: &Position{3, 4, 2, 2}},
+			"gets row",
+			&Puzzle{
+				Max: 4,
+				CurrentValues: map[Position]int{
+					{1, 1}: 1, {2, 1}: 2, {3, 1}: 3, {4, 1}: 4,
+					{1, 2}: 2, {2, 2}: 3, {3, 2}: 1, {4, 2}: 2,
+					{1, 3}: 2, {2, 3}: 1, {3, 3}: 4, {4, 3}: 3,
+					{1, 4}: 4, {2, 4}: 3, {3, 4}: 2, {4, 4}: 1,
+				},
 			},
+			args{Position{2, 3}},
+			[]Position{{2, 1}, {2, 2}, {2, 3}, {2, 4}},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := tt.puzzle.GetRow(tt.args.position)
-			for _, c := range tt.want {
-				gotHas := false
-
-				for _, g := range got {
-					if g.Position.Equal(c.Position) {
-						gotHas = true
-					}
-				}
-
-				if !gotHas {
-					t.Errorf("got:%v doesn't contain %v\n", got, c.Position)
-				}
+			if got := tt.puzzle.GetRow(tt.args.position); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Puzzle.GetRow() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
 func TestPuzzle_GetLine(t *testing.T) {
-	testPuzzle, _ := New(1, 4)
 	type args struct {
 		position Position
 		row      bool
 	}
-
 	tests := []struct {
 		name   string
 		puzzle *Puzzle
 		args   args
-		want   []*Cell
+		want   []Position
 	}{
 		{
-			"get's row line properly",
-			testPuzzle,
-			args{Position{3, 3, 2, 2}, true},
-			[]*Cell{
-				{Position: &Position{3, 1, 2, 1}},
-				{Position: &Position{3, 2, 2, 1}},
-				{Position: &Position{3, 3, 2, 2}},
-				{Position: &Position{3, 4, 2, 2}},
+			"gets col",
+			&Puzzle{
+				Max: 4,
+				CurrentValues: map[Position]int{
+					{1, 1}: 1, {2, 1}: 2, {3, 1}: 3, {4, 1}: 4,
+					{1, 2}: 2, {2, 2}: 3, {3, 2}: 1, {4, 2}: 2,
+					{1, 3}: 2, {2, 3}: 1, {3, 3}: 4, {4, 3}: 3,
+					{1, 4}: 4, {2, 4}: 3, {3, 4}: 2, {4, 4}: 1,
+				},
+			},
+			args{Position{2, 3}, false},
+			[]Position{{1, 3}, {2, 3}, {3, 3}, {4, 3}},
+		},
+		{
+			"gets row",
+			&Puzzle{
+				Max: 4,
+				CurrentValues: map[Position]int{
+					{1, 1}: 1, {2, 1}: 2, {3, 1}: 3, {4, 1}: 4,
+					{1, 2}: 2, {2, 2}: 3, {3, 2}: 1, {4, 2}: 2,
+					{1, 3}: 2, {2, 3}: 1, {3, 3}: 4, {4, 3}: 3,
+					{1, 4}: 4, {2, 4}: 3, {3, 4}: 2, {4, 4}: 1,
+				},
+			},
+			args{Position{2, 3}, true},
+			[]Position{{2, 1}, {2, 2}, {2, 3}, {2, 4}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.puzzle.GetLine(tt.args.position, tt.args.row); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Puzzle.GetLine() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestPuzzle_SetPotentialValues(t *testing.T) {
+	tests := []struct {
+		name   string
+		puzzle *Puzzle
+		want   map[Position][]int
+	}{
+		{
+			"single missing",
+			&Puzzle{
+				Max:             4,
+				macroSize:       2,
+				PotentialValues: map[Position][]int{},
+				Positions: []Position{
+					{1, 1}, {2, 1}, {3, 1}, {4, 1}, {1, 2}, {2, 2}, {3, 2}, {4, 2},
+					{1, 3}, {2, 3}, {3, 3}, {4, 3}, {1, 4}, {2, 4}, {3, 4}, {4, 4},
+				},
+				InitialValues: map[Position]int{
+					{1, 1}: 1, {2, 1}: 2, {3, 1}: 3, {4, 1}: 4,
+					{1, 2}: 2, {2, 2}: 3, {3, 2}: 1, {4, 2}: 2,
+					{1, 3}: 2, {2, 3}: 0, {3, 3}: 4, {4, 3}: 3,
+					{1, 4}: 4, {2, 4}: 3, {3, 4}: 2, {4, 4}: 1,
+				},
+				CurrentValues: map[Position]int{
+					{1, 1}: 1, {2, 1}: 2, {3, 1}: 3, {4, 1}: 4,
+					{1, 2}: 2, {2, 2}: 3, {3, 2}: 1, {4, 2}: 2,
+					{1, 3}: 2, {2, 3}: 0, {3, 3}: 4, {4, 3}: 3,
+					{1, 4}: 4, {2, 4}: 3, {3, 4}: 2, {4, 4}: 1,
+				},
+				TrueValues: map[Position]int{
+					{1, 1}: 1, {2, 1}: 2, {3, 1}: 3, {4, 1}: 4,
+					{1, 2}: 2, {2, 2}: 3, {3, 2}: 1, {4, 2}: 2,
+					{1, 3}: 2, {2, 3}: 1, {3, 3}: 4, {4, 3}: 3,
+					{1, 4}: 4, {2, 4}: 3, {3, 4}: 2, {4, 4}: 1,
+				},
+			},
+			map[Position][]int{
+				{1, 1}: {1}, {2, 1}: {2}, {3, 1}: {3}, {4, 1}: {4},
+				{1, 2}: {2}, {2, 2}: {3}, {3, 2}: {1}, {4, 2}: {2},
+				{1, 3}: {2}, {2, 3}: {1}, {3, 3}: {4}, {4, 3}: {3},
+				{1, 4}: {4}, {2, 4}: {3}, {3, 4}: {2}, {4, 4}: {1},
 			},
 		},
 		{
-			"get's Column properly",
-			testPuzzle,
-			args{Position{3, 3, 2, 2}, false},
-			[]*Cell{
-				{Position: &Position{1, 3, 1, 2}},
-				{Position: &Position{2, 3, 1, 2}},
-				{Position: &Position{3, 3, 2, 2}},
-				{Position: &Position{4, 3, 2, 2}},
+			"all missing",
+			&Puzzle{
+				Max:             4,
+				macroSize:       2,
+				PotentialValues: map[Position][]int{},
+				Positions: []Position{
+					{1, 1}, {2, 1}, {3, 1}, {4, 1}, {1, 2}, {2, 2}, {3, 2}, {4, 2},
+					{1, 3}, {2, 3}, {3, 3}, {4, 3}, {1, 4}, {2, 4}, {3, 4}, {4, 4},
+				},
+				InitialValues: map[Position]int{
+					{1, 1}: 0, {2, 1}: 0, {3, 1}: 0, {4, 1}: 0,
+					{1, 2}: 0, {2, 2}: 0, {3, 2}: 0, {4, 2}: 0,
+					{1, 3}: 0, {2, 3}: 0, {3, 3}: 0, {4, 3}: 0,
+					{1, 4}: 0, {2, 4}: 0, {3, 4}: 0, {4, 4}: 0,
+				},
+				CurrentValues: map[Position]int{
+					{1, 1}: 0, {2, 1}: 0, {3, 1}: 0, {4, 1}: 0,
+					{1, 2}: 0, {2, 2}: 0, {3, 2}: 0, {4, 2}: 0,
+					{1, 3}: 0, {2, 3}: 0, {3, 3}: 0, {4, 3}: 0,
+					{1, 4}: 0, {2, 4}: 0, {3, 4}: 0, {4, 4}: 0,
+				},
+				TrueValues: map[Position]int{
+					{1, 1}: 1, {2, 1}: 2, {3, 1}: 3, {4, 1}: 4,
+					{1, 2}: 2, {2, 2}: 3, {3, 2}: 1, {4, 2}: 2,
+					{1, 3}: 2, {2, 3}: 1, {3, 3}: 4, {4, 3}: 3,
+					{1, 4}: 4, {2, 4}: 3, {3, 4}: 2, {4, 4}: 1,
+				},
+			},
+			map[Position][]int{
+				{1, 1}: {1}, {2, 1}: {2}, {3, 1}: {3}, {4, 1}: {4},
+				{1, 2}: {2}, {2, 2}: {3}, {3, 2}: {1}, {4, 2}: {2},
+				{1, 3}: {2}, {2, 3}: {1}, {3, 3}: {4}, {4, 3}: {3},
+				{1, 4}: {4}, {2, 4}: {3}, {3, 4}: {2}, {4, 4}: {1},
+			},
+		},
+		{
+			"mostly missing",
+			&Puzzle{
+				Max:             4,
+				macroSize:       2,
+				PotentialValues: map[Position][]int{},
+				Positions: []Position{
+					{1, 1}, {2, 1}, {3, 1}, {4, 1}, {1, 2}, {2, 2}, {3, 2}, {4, 2},
+					{1, 3}, {2, 3}, {3, 3}, {4, 3}, {1, 4}, {2, 4}, {3, 4}, {4, 4},
+				},
+				InitialValues: map[Position]int{
+					{1, 1}: 0, {2, 1}: 2, {3, 1}: 0, {4, 1}: 0,
+					{1, 2}: 0, {2, 2}: 0, {3, 2}: 0, {4, 2}: 0,
+					{1, 3}: 0, {2, 3}: 0, {3, 3}: 0, {4, 3}: 3,
+					{1, 4}: 4, {2, 4}: 0, {3, 4}: 0, {4, 4}: 0,
+				},
+				CurrentValues: map[Position]int{
+					{1, 1}: 0, {2, 1}: 2, {3, 1}: 0, {4, 1}: 0,
+					{1, 2}: 0, {2, 2}: 0, {3, 2}: 0, {4, 2}: 0,
+					{1, 3}: 0, {2, 3}: 0, {3, 3}: 0, {4, 3}: 3,
+					{1, 4}: 4, {2, 4}: 0, {3, 4}: 0, {4, 4}: 0,
+				},
+				TrueValues: map[Position]int{
+					{1, 1}: 1, {2, 1}: 2, {3, 1}: 3, {4, 1}: 4,
+					{1, 2}: 2, {2, 2}: 3, {3, 2}: 1, {4, 2}: 2,
+					{1, 3}: 2, {2, 3}: 1, {3, 3}: 4, {4, 3}: 3,
+					{1, 4}: 4, {2, 4}: 3, {3, 4}: 2, {4, 4}: 1,
+				},
+			},
+			map[Position][]int{
+				{1, 1}: {1}, {2, 1}: {2}, {3, 1}: {3}, {4, 1}: {4},
+				{1, 2}: {2}, {2, 2}: {3}, {3, 2}: {1}, {4, 2}: {2},
+				{1, 3}: {2}, {2, 3}: {1}, {3, 3}: {4}, {4, 3}: {3},
+				{1, 4}: {4}, {2, 4}: {3}, {3, 4}: {2}, {4, 4}: {1},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := tt.puzzle.GetLine(tt.args.position, tt.args.row)
-			for _, c := range tt.want {
-				gotHas := false
+			tt.puzzle.SetPotentialValues()
+		})
+	}
+}
 
-				for _, g := range got {
-					if g.Position.Equal(c.Position) {
-						gotHas = true
-					}
-				}
-
-				if !gotHas {
-					t.Errorf("got:%v doesn't contain %v\n", got, c.Position)
-				}
+func TestPuzzle_setPotentialValues(t *testing.T) {
+	type args struct {
+		position Position
+	}
+	tests := []struct {
+		name   string
+		puzzle *Puzzle
+		args   args
+		want   []int
+	}{
+		{
+			"single missing",
+			&Puzzle{
+				Max:             4,
+				macroSize:       2,
+				PotentialValues: map[Position][]int{},
+				Positions: []Position{
+					{1, 1}, {2, 1}, {3, 1}, {4, 1}, {1, 2}, {2, 2}, {3, 2}, {4, 2},
+					{1, 3}, {2, 3}, {3, 3}, {4, 3}, {1, 4}, {2, 4}, {3, 4}, {4, 4},
+				},
+				InitialValues: map[Position]int{
+					{1, 1}: 1, {2, 1}: 2, {3, 1}: 3, {4, 1}: 4,
+					{1, 2}: 2, {2, 2}: 3, {3, 2}: 1, {4, 2}: 2,
+					{1, 3}: 2, {2, 3}: 0, {3, 3}: 4, {4, 3}: 3,
+					{1, 4}: 4, {2, 4}: 3, {3, 4}: 2, {4, 4}: 1,
+				},
+				CurrentValues: map[Position]int{
+					{1, 1}: 1, {2, 1}: 2, {3, 1}: 3, {4, 1}: 4,
+					{1, 2}: 2, {2, 2}: 3, {3, 2}: 1, {4, 2}: 2,
+					{1, 3}: 2, {2, 3}: 0, {3, 3}: 4, {4, 3}: 3,
+					{1, 4}: 4, {2, 4}: 3, {3, 4}: 2, {4, 4}: 1,
+				},
+				TrueValues: map[Position]int{
+					{1, 1}: 1, {2, 1}: 2, {3, 1}: 3, {4, 1}: 4,
+					{1, 2}: 2, {2, 2}: 3, {3, 2}: 1, {4, 2}: 2,
+					{1, 3}: 2, {2, 3}: 1, {3, 3}: 4, {4, 3}: 3,
+					{1, 4}: 4, {2, 4}: 3, {3, 4}: 2, {4, 4}: 1,
+				},
+			},
+			args{Position{2, 3}},
+			[]int{1},
+		},
+		{
+			"all missing",
+			&Puzzle{
+				Max:             4,
+				macroSize:       2,
+				PotentialValues: map[Position][]int{},
+				Positions: []Position{
+					{1, 1}, {2, 1}, {3, 1}, {4, 1}, {1, 2}, {2, 2}, {3, 2}, {4, 2},
+					{1, 3}, {2, 3}, {3, 3}, {4, 3}, {1, 4}, {2, 4}, {3, 4}, {4, 4},
+				},
+				InitialValues: map[Position]int{
+					{1, 1}: 0, {2, 1}: 0, {3, 1}: 0, {4, 1}: 0,
+					{1, 2}: 0, {2, 2}: 0, {3, 2}: 0, {4, 2}: 0,
+					{1, 3}: 0, {2, 3}: 0, {3, 3}: 0, {4, 3}: 0,
+					{1, 4}: 0, {2, 4}: 0, {3, 4}: 0, {4, 4}: 0,
+				},
+				CurrentValues: map[Position]int{
+					{1, 1}: 0, {2, 1}: 0, {3, 1}: 0, {4, 1}: 0,
+					{1, 2}: 0, {2, 2}: 0, {3, 2}: 0, {4, 2}: 0,
+					{1, 3}: 0, {2, 3}: 0, {3, 3}: 0, {4, 3}: 0,
+					{1, 4}: 0, {2, 4}: 0, {3, 4}: 0, {4, 4}: 0,
+				},
+				TrueValues: map[Position]int{
+					{1, 1}: 1, {2, 1}: 2, {3, 1}: 3, {4, 1}: 4,
+					{1, 2}: 2, {2, 2}: 3, {3, 2}: 1, {4, 2}: 2,
+					{1, 3}: 2, {2, 3}: 1, {3, 3}: 4, {4, 3}: 3,
+					{1, 4}: 4, {2, 4}: 3, {3, 4}: 2, {4, 4}: 1,
+				},
+			},
+			args{Position{2, 3}},
+			[]int{1, 2, 3, 4},
+		},
+		{
+			"mostly missing",
+			&Puzzle{
+				Max:             4,
+				macroSize:       2,
+				PotentialValues: map[Position][]int{},
+				Positions: []Position{
+					{1, 1}, {2, 1}, {3, 1}, {4, 1}, {1, 2}, {2, 2}, {3, 2}, {4, 2},
+					{1, 3}, {2, 3}, {3, 3}, {4, 3}, {1, 4}, {2, 4}, {3, 4}, {4, 4},
+				},
+				InitialValues: map[Position]int{
+					{1, 1}: 0, {2, 1}: 2, {3, 1}: 0, {4, 1}: 0,
+					{1, 2}: 0, {2, 2}: 0, {3, 2}: 0, {4, 2}: 0,
+					{1, 3}: 0, {2, 3}: 0, {3, 3}: 0, {4, 3}: 3,
+					{1, 4}: 4, {2, 4}: 0, {3, 4}: 0, {4, 4}: 0,
+				},
+				CurrentValues: map[Position]int{
+					{1, 1}: 0, {2, 1}: 2, {3, 1}: 0, {4, 1}: 0,
+					{1, 2}: 0, {2, 2}: 0, {3, 2}: 0, {4, 2}: 0,
+					{1, 3}: 0, {2, 3}: 0, {3, 3}: 0, {4, 3}: 3,
+					{1, 4}: 4, {2, 4}: 0, {3, 4}: 0, {4, 4}: 0,
+				},
+				TrueValues: map[Position]int{
+					{1, 1}: 1, {2, 1}: 2, {3, 1}: 3, {4, 1}: 4,
+					{1, 2}: 2, {2, 2}: 3, {3, 2}: 1, {4, 2}: 2,
+					{1, 3}: 2, {2, 3}: 1, {3, 3}: 4, {4, 3}: 3,
+					{1, 4}: 4, {2, 4}: 3, {3, 4}: 2, {4, 4}: 1,
+				},
+			},
+			args{Position{2, 3}},
+			[]int{1},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.puzzle.setPotentialValues(tt.args.position)
+			got := tt.puzzle.PotentialValues[tt.args.position]
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Puzzle.setPotentialValues() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
 func TestPuzzle_Valid(t *testing.T) {
-	testPuzzle, _ := New(1, 4)
-
 	tests := []struct {
-		name  string
-		cells []*Cell
-		want  bool
-		want1 map[Position]bool
+		name   string
+		puzzle *Puzzle
+		want   bool
 	}{
 		{
-			"no conflicts",
-			[]*Cell{
-				{currentValue: 1, Position: &Position{1, 1, 1, 1}, Puzzle: testPuzzle},
-				{currentValue: 2, Position: &Position{1, 2, 1, 1}, Puzzle: testPuzzle},
-				{currentValue: 3, Position: &Position{1, 3, 1, 2}, Puzzle: testPuzzle},
-				{currentValue: 4, Position: &Position{1, 4, 1, 2}, Puzzle: testPuzzle},
-				{currentValue: 3, Position: &Position{2, 1, 1, 1}, Puzzle: testPuzzle},
-				{currentValue: 4, Position: &Position{2, 2, 1, 1}, Puzzle: testPuzzle},
-				{currentValue: 1, Position: &Position{2, 3, 1, 2}, Puzzle: testPuzzle},
-				{currentValue: 2, Position: &Position{2, 4, 1, 2}, Puzzle: testPuzzle},
-				{currentValue: 2, Position: &Position{3, 1, 2, 1}, Puzzle: testPuzzle},
-				{currentValue: 1, Position: &Position{3, 2, 2, 1}, Puzzle: testPuzzle},
-				{currentValue: 4, Position: &Position{3, 3, 2, 2}, Puzzle: testPuzzle},
-				{currentValue: 3, Position: &Position{3, 4, 2, 2}, Puzzle: testPuzzle},
-				{currentValue: 4, Position: &Position{4, 1, 2, 1}, Puzzle: testPuzzle},
-				{currentValue: 3, Position: &Position{4, 2, 2, 1}, Puzzle: testPuzzle},
-				{currentValue: 2, Position: &Position{4, 3, 2, 2}, Puzzle: testPuzzle},
-				{currentValue: 1, Position: &Position{4, 4, 2, 2}, Puzzle: testPuzzle},
+			"valid",
+			&Puzzle{
+				Max:       4,
+				macroSize: 2,
+				Positions: []Position{
+					{1, 1}, {2, 1}, {3, 1}, {4, 1}, {1, 2}, {2, 2}, {3, 2}, {4, 2},
+					{1, 3}, {2, 3}, {3, 3}, {4, 3}, {1, 4}, {2, 4}, {3, 4}, {4, 4},
+				},
+				CurrentValues: map[Position]int{
+					{1, 1}: 1, {2, 1}: 2, {3, 1}: 3, {4, 1}: 4,
+					{1, 2}: 2, {2, 2}: 3, {3, 2}: 1, {4, 2}: 2,
+					{1, 3}: 2, {2, 3}: 1, {3, 3}: 4, {4, 3}: 3,
+					{1, 4}: 4, {2, 4}: 3, {3, 4}: 2, {4, 4}: 1,
+				},
 			},
-			true,
-			map[Position]bool{
-				{1, 1, 1, 1}: true,
-				{1, 2, 1, 1}: true,
-				{1, 3, 1, 2}: true,
-				{1, 4, 1, 2}: true,
-				{2, 1, 1, 1}: true,
-				{2, 2, 1, 1}: true,
-				{2, 3, 1, 2}: true,
-				{2, 4, 1, 2}: true,
-				{3, 1, 2, 1}: true,
-				{3, 2, 2, 1}: true,
-				{3, 3, 2, 2}: true,
-				{3, 4, 2, 2}: true,
-				{4, 1, 2, 1}: true,
-				{4, 2, 2, 1}: true,
-				{4, 3, 2, 2}: true,
-				{4, 4, 2, 2}: true,
-			},
-		},
+			true},
 		{
-			"conflicts",
-			[]*Cell{
-				{currentValue: 1, trueValue: 1, initialValue: 0, Position: &Position{1, 1, 1, 1}, Puzzle: testPuzzle},
-				{currentValue: 2, trueValue: 2, initialValue: 0, Position: &Position{1, 2, 1, 1}, Puzzle: testPuzzle},
-				{currentValue: 3, trueValue: 3, initialValue: 0, Position: &Position{1, 3, 1, 2}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 4, initialValue: 0, Position: &Position{1, 4, 1, 2}, Puzzle: testPuzzle},
-				{currentValue: 3, trueValue: 3, initialValue: 0, Position: &Position{2, 1, 1, 1}, Puzzle: testPuzzle},
-				{currentValue: 4, trueValue: 4, initialValue: 0, Position: &Position{2, 2, 1, 1}, Puzzle: testPuzzle},
-				{currentValue: 1, trueValue: 1, initialValue: 0, Position: &Position{2, 3, 1, 2}, Puzzle: testPuzzle},
-				{currentValue: 3, trueValue: 2, initialValue: 0, Position: &Position{2, 4, 1, 2}, Puzzle: testPuzzle},
-				{currentValue: 2, trueValue: 2, initialValue: 0, Position: &Position{3, 1, 2, 1}, Puzzle: testPuzzle},
-				{currentValue: 1, trueValue: 1, initialValue: 0, Position: &Position{3, 2, 2, 1}, Puzzle: testPuzzle},
-				{currentValue: 1, trueValue: 4, initialValue: 0, Position: &Position{3, 3, 2, 2}, Puzzle: testPuzzle},
-				{currentValue: 3, trueValue: 3, initialValue: 0, Position: &Position{3, 4, 2, 2}, Puzzle: testPuzzle},
-				{currentValue: 4, trueValue: 4, initialValue: 0, Position: &Position{4, 1, 2, 1}, Puzzle: testPuzzle},
-				{currentValue: 3, trueValue: 3, initialValue: 0, Position: &Position{4, 2, 2, 1}, Puzzle: testPuzzle},
-				{currentValue: 2, trueValue: 2, initialValue: 0, Position: &Position{4, 3, 2, 2}, Puzzle: testPuzzle},
-				{currentValue: 2, trueValue: 1, initialValue: 0, Position: &Position{4, 4, 2, 2}, Puzzle: testPuzzle},
+			"invalid",
+			&Puzzle{
+				Max:       4,
+				macroSize: 2,
+				Positions: []Position{
+					{1, 1}, {2, 1}, {3, 1}, {4, 1}, {1, 2}, {2, 2}, {3, 2}, {4, 2},
+					{1, 3}, {2, 3}, {3, 3}, {4, 3}, {1, 4}, {2, 4}, {3, 4}, {4, 4},
+				},
+				CurrentValues: map[Position]int{
+					{1, 1}: 2, {2, 1}: 2, {3, 1}: 3, {4, 1}: 4,
+					{1, 2}: 2, {2, 2}: 3, {3, 2}: 1, {4, 2}: 2,
+					{1, 3}: 2, {2, 3}: 1, {3, 3}: 4, {4, 3}: 3,
+					{1, 4}: 4, {2, 4}: 3, {3, 4}: 2, {4, 4}: 1,
+				},
 			},
-			false,
-			map[Position]bool{
-				{1, 1, 1, 1}: true,
-				{1, 2, 1, 1}: true,
-				{1, 3, 1, 2}: false,
-				{1, 4, 1, 2}: false,
-				{2, 1, 1, 1}: false,
-				{2, 2, 1, 1}: true,
-				{2, 3, 1, 2}: false,
-				{2, 4, 1, 2}: false,
-				{3, 1, 2, 1}: true,
-				{3, 2, 2, 1}: false,
-				{3, 3, 2, 2}: false,
-				{3, 4, 2, 2}: false,
-				{4, 1, 2, 1}: true,
-				{4, 2, 2, 1}: true,
-				{4, 3, 2, 2}: false,
-				{4, 4, 2, 2}: false,
-			},
-		},
+			false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			testPuzzle.Cells = tt.cells
-			got, got1 := testPuzzle.Valid()
-			if got != tt.want {
-				t.Errorf("Puzzle.Valid() got = %v, want %v", got, tt.want)
-			}
-			if !reflect.DeepEqual(got1, tt.want1) {
-				t.Errorf("Puzzle.Valid() got1 = %v,\n want %v", got1, tt.want1)
+			if got := tt.puzzle.Valid(); got != tt.want {
+				t.Errorf("Puzzle.Valid() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func Test_setPotentialValues(t *testing.T) {
-	testPuzzle, _ := New(1, 4)
-
+func TestPuzzle_valid(t *testing.T) {
+	puzzle := Puzzle{
+		Max:       4,
+		macroSize: 2,
+		Positions: []Position{
+			{1, 1}, {2, 1}, {3, 1}, {4, 1}, {1, 2}, {2, 2}, {3, 2}, {4, 2},
+			{1, 3}, {2, 3}, {3, 3}, {4, 3}, {1, 4}, {2, 4}, {3, 4}, {4, 4},
+		},
+		CurrentValues: map[Position]int{
+			{1, 1}: 1, {2, 1}: 2, {3, 1}: 3, {4, 1}: 4,
+			{1, 2}: 2, {2, 2}: 3, {3, 2}: 1, {4, 2}: 2,
+			{1, 3}: 2, {2, 3}: 1, {3, 3}: 4, {4, 3}: 3,
+			{1, 4}: 4, {2, 4}: 3, {3, 4}: 2, {4, 4}: 2,
+		},
+	}
+	type args struct {
+		position Position
+	}
 	tests := []struct {
-		name     string
-		cells    []*Cell
-		position *Position
-		want     []int
+		name   string
+		puzzle *Puzzle
+		args   args
+		want   bool
+	}{
+		{"{1.1} valid", &puzzle, args{Position{1, 1}}, true},
+		{"{4.4} invalid", &puzzle, args{Position{4, 4}}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.puzzle.valid(tt.args.position); got != tt.want {
+				t.Errorf("Puzzle.valid() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestPuzzle_validGroup(t *testing.T) {
+	type args struct {
+		position Position
+		group    []Position
+	}
+	tests := []struct {
+		name   string
+		puzzle *Puzzle
+		args   args
+		want   bool
 	}{
 		{
-			"empty puzzle",
-			[]*Cell{
-				{currentValue: 0, trueValue: 1, initialValue: 0, Position: &Position{1, 1, 1, 1}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 2, initialValue: 0, Position: &Position{1, 2, 1, 1}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 3, initialValue: 0, Position: &Position{1, 3, 1, 2}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 4, initialValue: 0, Position: &Position{1, 4, 1, 2}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 3, initialValue: 0, Position: &Position{2, 1, 1, 1}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 4, initialValue: 0, Position: &Position{2, 2, 1, 1}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 1, initialValue: 0, Position: &Position{2, 3, 1, 2}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 2, initialValue: 0, Position: &Position{2, 4, 1, 2}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 2, initialValue: 0, Position: &Position{3, 1, 2, 1}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 1, initialValue: 0, Position: &Position{3, 2, 2, 1}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 4, initialValue: 0, Position: &Position{3, 3, 2, 2}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 3, initialValue: 0, Position: &Position{3, 4, 2, 2}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 4, initialValue: 0, Position: &Position{4, 1, 2, 1}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 3, initialValue: 0, Position: &Position{4, 2, 2, 1}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 2, initialValue: 0, Position: &Position{4, 3, 2, 2}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 1, initialValue: 0, Position: &Position{4, 4, 2, 2}, Puzzle: testPuzzle},
+			"diff pos; diff value; valid",
+			&Puzzle{
+				CurrentValues: map[Position]int{{0, 0}: 1, {0, 1}: 2, {1, 0}: 3, {1, 1}: 4},
 			},
-			&Position{1, 1, 1, 1},
-			[]int{1, 2, 3, 4},
+			args{Position{0, 0}, []Position{{0, 1}, {1, 0}, {1, 1}}},
+			true,
 		},
 		{
-			"cell 1,1 certain",
-			[]*Cell{
-				{currentValue: 0, trueValue: 1, initialValue: 0, Position: &Position{1, 1, 1, 1}, Puzzle: testPuzzle},
-				{currentValue: 2, trueValue: 2, initialValue: 0, Position: &Position{1, 2, 1, 1}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 3, initialValue: 0, Position: &Position{1, 3, 1, 2}, Puzzle: testPuzzle},
-				{currentValue: 4, trueValue: 4, initialValue: 0, Position: &Position{1, 4, 1, 2}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 3, initialValue: 0, Position: &Position{2, 1, 1, 1}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 4, initialValue: 0, Position: &Position{2, 2, 1, 1}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 1, initialValue: 0, Position: &Position{2, 3, 1, 2}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 2, initialValue: 0, Position: &Position{2, 4, 1, 2}, Puzzle: testPuzzle},
-				{currentValue: 3, trueValue: 2, initialValue: 0, Position: &Position{3, 1, 2, 1}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 1, initialValue: 0, Position: &Position{3, 2, 2, 1}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 4, initialValue: 0, Position: &Position{3, 3, 2, 2}, Puzzle: testPuzzle},
-				{currentValue: 3, trueValue: 3, initialValue: 0, Position: &Position{3, 4, 2, 2}, Puzzle: testPuzzle},
-				{currentValue: 4, trueValue: 4, initialValue: 0, Position: &Position{4, 1, 2, 1}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 3, initialValue: 0, Position: &Position{4, 2, 2, 1}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 2, initialValue: 0, Position: &Position{4, 3, 2, 2}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 1, initialValue: 0, Position: &Position{4, 4, 2, 2}, Puzzle: testPuzzle},
+			"shared pos; diff value; map handles this",
+			&Puzzle{
+				CurrentValues: map[Position]int{{0, 0}: 1, {0, 0}: 2, {1, 0}: 3, {1, 1}: 4},
 			},
-			&Position{1, 1, 1, 1},
-			[]int{1},
+			args{Position{0, 0}, []Position{{0, 0}, {1, 0}, {1, 1}}},
+			true,
 		},
 		{
-			"cell 1,1 certain but wrong",
-			[]*Cell{
-				{currentValue: 0, trueValue: 1, initialValue: 0, Position: &Position{1, 1, 1, 1}, Puzzle: testPuzzle},
-				{currentValue: 2, trueValue: 2, initialValue: 0, Position: &Position{1, 2, 1, 1}, Puzzle: testPuzzle},
-				{currentValue: 1, trueValue: 3, initialValue: 0, Position: &Position{1, 3, 1, 2}, Puzzle: testPuzzle},
-				{currentValue: 4, trueValue: 4, initialValue: 0, Position: &Position{1, 4, 1, 2}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 3, initialValue: 0, Position: &Position{2, 1, 1, 1}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 4, initialValue: 0, Position: &Position{2, 2, 1, 1}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 1, initialValue: 0, Position: &Position{2, 3, 1, 2}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 2, initialValue: 0, Position: &Position{2, 4, 1, 2}, Puzzle: testPuzzle},
-				{currentValue: 1, trueValue: 2, initialValue: 0, Position: &Position{3, 1, 2, 1}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 1, initialValue: 0, Position: &Position{3, 2, 2, 1}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 4, initialValue: 0, Position: &Position{3, 3, 2, 2}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 3, initialValue: 0, Position: &Position{3, 4, 2, 2}, Puzzle: testPuzzle},
-				{currentValue: 1, trueValue: 4, initialValue: 0, Position: &Position{4, 1, 2, 1}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 3, initialValue: 0, Position: &Position{4, 2, 2, 1}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 2, initialValue: 0, Position: &Position{4, 3, 2, 2}, Puzzle: testPuzzle},
-				{currentValue: 0, trueValue: 1, initialValue: 0, Position: &Position{4, 4, 2, 2}, Puzzle: testPuzzle},
+			"diff pos; shared value; valid",
+			&Puzzle{
+				CurrentValues: map[Position]int{{0, 0}: 1, {0, 1}: 2, {1, 0}: 1, {1, 1}: 4},
 			},
-			&Position{1, 1, 1, 1},
-			[]int{3},
+			args{Position{0, 0}, []Position{{0, 1}, {1, 0}, {1, 1}}},
+			false,
+		},
+		{
+			"shared pos; diff value; valid",
+			&Puzzle{
+				CurrentValues: map[Position]int{{0, 0}: 1, {0, 1}: 2, {1, 0}: 3, {0, 0}: 1},
+			},
+			args{Position{0, 0}, []Position{{0, 1}, {1, 0}, {1, 1}}},
+			true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.puzzle.validGroup(tt.args.position, tt.args.group); got != tt.want {
+				t.Errorf("Puzzle.validGroup() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestPuzzle_Conflict(t *testing.T) {
+	type args struct {
+		a Position
+		b Position
+	}
+	tests := []struct {
+		name   string
+		puzzle *Puzzle
+		args   args
+		want   bool
+	}{
+		{
+			"diff pos; diff value; no conflict",
+			&Puzzle{CurrentValues: map[Position]int{{0, 0}: 1, {0, 1}: 2}},
+			args{Position{0, 0}, Position{0, 1}},
+			false,
+		},
+		{
+			"diff pos; same value; conflict",
+			&Puzzle{CurrentValues: map[Position]int{{0, 0}: 1, {0, 1}: 1}},
+			args{Position{0, 0}, Position{0, 1}},
+			true,
+		},
+		{
+			"same pos; diff value; conflict",
+			&Puzzle{CurrentValues: map[Position]int{{0, 0}: 1, {0, 0}: 2}},
+			args{Position{0, 0}, Position{0, 0}},
+			false,
+		},
+		{
+			"same pos; same value; no conflict",
+			&Puzzle{CurrentValues: map[Position]int{{0, 0}: 1, {0, 0}: 1}},
+			args{Position{0, 0}, Position{0, 0}},
+			false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			testPuzzle.Cells = tt.cells
-			testPuzzle.setPotentialValues(tt.position)
-			got := testPuzzle.GetCell(*tt.position).potentialValues
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Puzzle.Valid() got1 = %v,\n want %v", got, tt.want)
+			if got := tt.puzzle.Conflict(tt.args.a, tt.args.b); got != tt.want {
+				t.Errorf("Puzzle.Conflict() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestPuzzle_CurrentValueString(t *testing.T) {
+	tests := []struct {
+		name   string
+		puzzle *Puzzle
+		want   string
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.puzzle.CurrentValueString(); got != tt.want {
+				t.Errorf("Puzzle.CurrentValueString() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestPuzzle_ReadableCurrentValueString(t *testing.T) {
+	tests := []struct {
+		name   string
+		puzzle *Puzzle
+		want   string
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.puzzle.ReadableCurrentValueString(); got != tt.want {
+				t.Errorf("Puzzle.ReadableCurrentValueString() = %v, want %v", got, tt.want)
 			}
 		})
 	}
